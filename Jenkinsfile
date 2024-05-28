@@ -14,8 +14,7 @@ pipeline {
     stages {
         stage('Checkout Code') {
             steps {
-                git branch: 'main',
-                    url: 'https://github.com/nitya-khuntia/Ci-Cd'
+                git branch: 'main', url: 'https://github.com/nitya-khuntia/Ci-Cd'
             }
         }
 
@@ -27,13 +26,23 @@ pipeline {
             }
         }
 
+        stage('Verify Docker Hub Access') {
+            steps {
+                script {
+                    withDockerRegistry([credentialsId: "${DOCKER_CREDENTIALS_ID}", url: 'https://index.docker.io/v1/']) {
+                        bat 'docker login -u nityakhuntia -p ******** https://index.docker.io/v1/'
+                    }
+                }
+            }
+        }
+
         stage('Build Docker Image') {
             when {
                 expression { return fileExists('Dockerfile') }
             }
             steps {
                 script {
-                    docker.build("${IMAGE}")
+                    docker.build("${DOCKER_IMAGE}")
                 }
             }
         }
@@ -53,15 +62,18 @@ pipeline {
             }
         }
 
-        stage('Push Docker Image') {
+        stage('Push Docker Image to GCR') {
             steps {
                 script {
-                    docker.withRegistry('https://index.docker.io/v1/', "${DOCKER_CREDENTIALS_ID}") {
-                        docker.image("${DOCKER_IMAGE}").push()
+                    withCredentials([file(credentialsId: 'your-gcloud-credentials-id', variable: 'GCLOUD_SERVICE_KEY')]) {
+                        sh 'echo $GCLOUD_SERVICE_KEY | gcloud auth activate-service-account --key-file=-'
+                        sh 'gcloud auth configure-docker --quiet'
+                        sh "docker push ${DOCKER_IMAGE}"
                     }
                 }
             }
         }
+
 
         stage('Deploy to GKE') {
             steps {
