@@ -66,22 +66,23 @@ pipeline {
             steps {
                 script {
                     withCredentials([file(credentialsId: 'your-gcloud-credentials-id', variable: 'GCLOUD_SERVICE_KEY')]) {
-                        sh 'echo $GCLOUD_SERVICE_KEY | gcloud auth activate-service-account --key-file=-'
-                        sh 'gcloud auth configure-docker --quiet'
-                        sh "docker push ${DOCKER_IMAGE}"
+                        bat 'echo %GCLOUD_SERVICE_KEY% > gcloud-key.json'
+                        bat 'gcloud auth activate-service-account --key-file=gcloud-key.json'
+                        bat 'gcloud auth configure-docker --quiet'
+                        bat "docker push ${DOCKER_IMAGE}"
                     }
                 }
             }
         }
 
-
         stage('Deploy to GKE') {
             steps {
                 script {
                     withCredentials([file(credentialsId: 'your-gcloud-credentials-id', variable: 'GCLOUD_SERVICE_KEY')]) {
-                        bat 'echo %GCLOUD_SERVICE_KEY% | gcloud auth activate-service-account --key-file=-'
-                        bat 'gcloud config set project %PROJECT_ID%'
-                        bat 'gcloud container clusters get-credentials %CLUSTER_NAME% --zone %CLUSTER_ZONE%'
+                        bat 'echo %GCLOUD_SERVICE_KEY% > gcloud-key.json'
+                        bat 'gcloud auth activate-service-account --key-file=gcloud-key.json'
+                        bat 'gcloud config set project ${PROJECT_ID}'
+                        bat 'gcloud container clusters get-credentials ${CLUSTER_NAME} --zone ${CLUSTER_ZONE}'
                     }
                     bat 'kubectl apply -f deployment.yaml'
                     bat 'kubectl apply -f service.yaml'
