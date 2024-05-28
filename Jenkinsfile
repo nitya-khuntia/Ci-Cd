@@ -67,7 +67,7 @@ pipeline {
                     withCredentials([file(credentialsId: 'your-gcloud-credentials-id', variable: 'GCLOUD_SERVICE_KEY')]) {
                         sh 'echo $GCLOUD_SERVICE_KEY | gcloud auth activate-service-account --key-file=-'
                         sh 'gcloud config set project ${PROJECT_ID}'
-                        sh 'gcloud container clusters get-credentials ${CLUSTER_NAME} --zone ${CLUSTER_ZONE}'
+                        sh 'gcloud container clusters get-credentials my-cluster --zone us-central1'
                     }
                     sh 'kubectl apply -f deployment.yaml'
                     sh 'kubectl apply -f service.yaml'
@@ -76,12 +76,11 @@ pipeline {
         }
     }
 
-     post {
+    post {
         always {
             node {
                 cleanWs()
             }
-        }    
-   
+        }
     }
 }
