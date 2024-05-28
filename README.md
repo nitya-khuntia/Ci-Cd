@@ -14,7 +14,7 @@ This project automates the process of training, testing, building, and deploying
 ## Folder Structure
 ```plaintext
 
-├── app.py # Flask application for serving the model
+├── app.py # sample flask application
 ├── claim.py # Script to train the insurance claim model
 ├── deployment.yaml # Kubernetes deployment configuration
 ├── Dockerfile # Dockerfile to build the Docker image
