@@ -26,15 +26,15 @@ pipeline {
             }
         }
 
-        stage('Verify Docker Hub Access') {
-            steps {
-                script {
-                    withDockerRegistry([credentialsId: "${DOCKER_CREDENTIALS_ID}", url: 'https://index.docker.io/v1/']) {
-                        bat 'docker login -u nityakhuntia -p ******** https://index.docker.io/v1/'
-                    }
-                }
-            }
-        }
+        // stage('Verify Docker Hub Access') {
+        //     steps {
+        //         script {
+        //             withDockerRegistry([credentialsId: "${DOCKER_CREDENTIALS_ID}", url: 'https://index.docker.io/v1/']) {
+        //                 bat 'docker login -u nityakhuntia -p ******** https://index.docker.io/v1/'
+        //             }
+        //         }
+        //     }
+        // }
 
         stage('Build Docker Image') {
             when {
