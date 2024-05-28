@@ -2,11 +2,13 @@ pipeline {
     agent any
 
     environment {
+        DOCKER_CREDENTIALS_ID = 'docker-hub-credentials' // The ID of the Docker Hub credentials in Jenkins
         PROJECT_ID = 'project-ml-424615'
         IMAGE = "gcr.io/${PROJECT_ID}/insurance_claim_model:${env.BUILD_ID}"
         CLUSTER_NAME = 'my-cluster' // Replace with your GKE cluster name
         CLUSTER_ZONE = 'us-central1' // Replace with your GKE cluster zone
         GOOGLE_APPLICATION_CREDENTIALS = credentials('your-gcloud-credentials-id') // Replace with your Google Cloud credentials ID in Jenkins
+        DOCKER_IMAGE = "gcr.io/${PROJECT_ID}/insurance_claim_model:${env.BUILD_ID}"
     }
 
     stages {
@@ -54,8 +56,8 @@ pipeline {
         stage('Push Docker Image') {
             steps {
                 script {
-                    docker.withRegistry('https://gcr.io', GOOGLE_APPLICATION_CREDENTIALS) {
-                        docker.image("${IMAGE}").push()
+                    docker.withRegistry('https://index.docker.io/v1/', "${DOCKER_CREDENTIALS_ID}") {
+                        docker.image("${DOCKER_IMAGE}").push()
                     }
                 }
             }
@@ -65,12 +67,12 @@ pipeline {
             steps {
                 script {
                     withCredentials([file(credentialsId: 'your-gcloud-credentials-id', variable: 'GCLOUD_SERVICE_KEY')]) {
-                        sh 'echo $GCLOUD_SERVICE_KEY | gcloud auth activate-service-account --key-file=-'
-                        sh 'gcloud config set project ${PROJECT_ID}'
-                        sh 'gcloud container clusters get-credentials my-cluster --zone us-central1'
+                        bat 'echo %GCLOUD_SERVICE_KEY% | gcloud auth activate-service-account --key-file=-'
+                        bat 'gcloud config set project %PROJECT_ID%'
+                        bat 'gcloud container clusters get-credentials %CLUSTER_NAME% --zone %CLUSTER_ZONE%'
                     }
-                    sh 'kubectl apply -f deployment.yaml'
-                    sh 'kubectl apply -f service.yaml'
+                    bat 'kubectl apply -f deployment.yaml'
+                    bat 'kubectl apply -f service.yaml'
                 }
             }
         }
@@ -78,9 +80,7 @@ pipeline {
 
     post {
         always {
-            node('any') {
-                cleanWs()
-            }
+            cleanWs()
         }
     }
 }
