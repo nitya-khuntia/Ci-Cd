@@ -2,8 +2,11 @@ pipeline {
     agent any
 
     environment {
-        DOCKER_CREDENTIALS_ID = 'docker-hub-credentials' // The ID of the Docker Hub credentials in Jenkins
-        DOCKER_IMAGE = "nityakhuntia/insurance_claim_model:${env.BUILD_ID}" // Ensure this is your Docker Hub username
+        PROJECT_ID = 'project-ml-424615'
+        IMAGE = "gcr.io/${PROJECT_ID}/insurance_claim_model:${env.BUILD_ID}"
+        CLUSTER_NAME = 'my-cluster' // Replace with your GKE cluster name
+        CLUSTER_ZONE = 'us-central1' // Replace with your GKE cluster zone
+        GOOGLE_APPLICATION_CREDENTIALS = credentials('google_service_account') // Replace with your Google Cloud credentials ID in Jenkins
     }
 
     stages {
@@ -28,7 +31,7 @@ pipeline {
             }
             steps {
                 script {
-                    docker.build("${DOCKER_IMAGE}")
+                    docker.build("${IMAGE}")
                 }
             }
         }
@@ -51,20 +54,31 @@ pipeline {
         stage('Push Docker Image') {
             steps {
                 script {
-                    docker.withRegistry('https://index.docker.io/v1/', "${DOCKER_CREDENTIALS_ID}") {
-                        docker.image("${DOCKER_IMAGE}").push()
+                    docker.withRegistry('https://gcr.io', GOOGLE_APPLICATION_CREDENTIALS) {
+                        docker.image("${IMAGE}").push()
                     }
                 }
             }
         }
 
-        stage('Deploy Docker Container') {
+        stage('Deploy to GKE') {
             steps {
                 script {
-                    def container = docker.image("${DOCKER_IMAGE}")
-                    container.run("-d -p 80:80 --name insurance_claim_model_container")
+                    withCredentials([file(credentialsId: 'google_service_account', variable: 'GCLOUD_SERVICE_KEY')]) {
+                        sh 'echo $GCLOUD_SERVICE_KEY | gcloud auth activate-service-account --key-file=-'
+                        sh 'gcloud config set project ${PROJECT_ID}'
+                        sh 'gcloud container clusters get-credentials ${CLUSTER_NAME} --zone ${CLUSTER_ZONE}'
+                    }
+                    sh 'kubectl apply -f deployment.yaml'
+                    sh 'kubectl apply -f service.yaml'
                 }
             }
+        }
+    }
+
+    post {
+        always {
+            cleanWs()
         }
     }
 }

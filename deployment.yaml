@@ -1,0 +1,20 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: insurance-claim-model
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: insurance-claim-model
+  template:
+    metadata:
+      labels:
+        app: insurance-claim-model
+    spec:
+      containers:
+      - name: insurance-claim-model
+        image: gcr.io/project-ml-424615/insurance_claim_model:latest
+        ports:
+        - containerPort: 80
+

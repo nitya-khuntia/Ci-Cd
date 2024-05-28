@@ -1,5 +1,5 @@
-# Use an official Python runtime as a parent image
-FROM python:3.10.4
+# Use the official Python image
+FROM python:3.10-slim
 
 # Set the working directory
 WORKDIR /app
@@ -16,5 +16,5 @@ EXPOSE 80
 # Define environment variable
 ENV NAME World
 
-# Run the application
-CMD ["python", "claim.py"]
+# Run app.py when the container launches
+CMD ["python", "app.py"]
