@@ -1,7 +1,9 @@
 pipeline {
     agent any
 
+    
     environment {
+        PATH = "${env.PATH};C:\\InstalledSoftware\\Google\\Cloud SDK\\google-cloud-sdk\\bin"
         DOCKER_CREDENTIALS_ID = 'docker-hub-credentials' // The ID of the Docker Hub credentials in Jenkins
         PROJECT_ID = 'project-ml-424615'
         IMAGE = "gcr.io/${PROJECT_ID}/insurance_claim_model:${env.BUILD_ID}"
